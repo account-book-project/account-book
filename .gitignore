@@ -1,4 +1,5 @@
-
+# 줄바꿈
+.gitattributes
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
