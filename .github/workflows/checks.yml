@@ -33,23 +33,23 @@ jobs:
 
       - name: Build and start containers
         run: |
-          docker-compose up -d --build
+          docker compose up -d --build
           sleep 10  # wait for DB to be ready
 
       - name: Check code formatting with isort
-        run: docker-compose exec my-django isort . --check --diff
+        run: docker compose exec my-django isort . --check --diff
 
       - name: Check code formatting with black
-        run: docker-compose exec my-django black . --check
+        run: docker compose exec my-django black . --check
 
       - name: Apply migrations
-        run: docker-compose exec my-django python manage.py migrate
+        run: docker compose exec my-django python manage.py migrate
 
       - name: Run tests
-        run: docker-compose exec my-django python manage.py test
+        run: docker compose exec my-django python manage.py test
 
       - name: Cleanup containers
-        run: docker-compose down --volumes --remove-orphans
+        run: docker compose down --volumes --remove-orphans
 
 
 
