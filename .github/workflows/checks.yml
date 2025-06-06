@@ -37,19 +37,19 @@ jobs:
           pip install -r requirements.txt
 
       - name: Start Docker containers
-        run: docker-compose up -d --build
+        run: docker compose up -d --build
 
       - name: Wait for database to be ready
         run: sleep 15
 
       - name: Apply migrations
-        run: docker-compose exec my-django python manage.py migrate
+        run: docker compose exec my-django python manage.py migrate
 
       - name: Run tests
-        run: docker-compose exec my-django python manage.py test
+        run: docker compose exec my-django python manage.py test
 
       - name: Cleanup containers
-        run: docker-compose down --volumes --remove-orphans
+        run: docker compose down --volumes --remove-orphans
 
 
 
