@@ -15,8 +15,8 @@ jobs:
     services:
       my-db:
         image: postgres:14
-        ports:
-          - 5432:5432
+#        ports:
+#          - 5432:5432
         env:
           POSTGRES_USER: ${{ secrets.PG_USER }}
           POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
