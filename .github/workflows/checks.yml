@@ -36,20 +36,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Start Docker containers
-        run: docker compose up -d --build
+      - name: Check code formatting with isort
+        run: isort . --check --diff
 
-      - name: Wait for database to be ready
-        run: sleep 15
+      - name: Check code formatting with black
+        run: black . --check
 
       - name: Apply migrations
-        run: docker compose exec my-django python manage.py migrate
+        run: python manage.py migrate
 
       - name: Run tests
-        run: docker compose exec my-django python manage.py test
+        run: python manage.py test
 
+      # Cleanup 스텝 활용 하지않을경우 추후 삭제
       - name: Cleanup containers
-        run: docker compose down --volumes --remove-orphans
-
+        run: docker-compose down --volumes --remove-orphans
 
 
