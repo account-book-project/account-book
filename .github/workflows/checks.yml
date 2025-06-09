@@ -15,6 +15,7 @@ jobs:
     services:
       my-db:
         image: postgres:14
+
         env:
           POSTGRES_USER: ${{ secrets.PG_USER }}
           POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
@@ -24,6 +25,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --memory=512m
 
     steps:
       - name: Checkout code
