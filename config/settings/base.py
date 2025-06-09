@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "accountbook",
 ]
 
 MIDDLEWARE = [
@@ -90,5 +91,13 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # 기본 primary key type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# 유저 인증
+AUTH_USER_MODEL = 'accountbook.CustomUser'
