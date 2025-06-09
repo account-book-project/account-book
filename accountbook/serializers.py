@@ -1,15 +1,17 @@
 # accountbook/serializers.py
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .constants import ACCOUNT_TYPE, BANK_CODES, TRANSACTION_METHOD, TRANSACTION_TYPE
 from .models import Account, TransactionHistory
-from .constants import BANK_CODES, ACCOUNT_TYPE, TRANSACTION_TYPE, TRANSACTION_METHOD
 
 User = get_user_model()
 
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.USERNAME_FIELD
+
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
@@ -66,9 +68,23 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ['id', 'account_number', 'bank_code', 'bank_name', 'account_type',
-                  'account_type_name', 'balance', 'created_at']
-        read_only_fields = ['id', 'balance', 'created_at', 'bank_name', 'account_type_name']
+        fields = [
+            'id',
+            'account_number',
+            'bank_code',
+            'bank_name',
+            'account_type',
+            'account_type_name',
+            'balance',
+            'created_at',
+        ]
+        read_only_fields = [
+            'id',
+            'balance',
+            'created_at',
+            'bank_name',
+            'account_type_name',
+        ]
 
     def get_bank_name(self, obj):
         return dict(BANK_CODES).get(obj.bank_code, '알 수 없음')
@@ -107,11 +123,23 @@ class TransactionHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TransactionHistory
-        fields = ['id', 'transaction_amount', 'post_transaction_amount', 'transaction_details',
-                  'transaction_type', 'transaction_type_name', 'transaction_method',
-                  'transaction_method_name', 'transaction_timestamp']
-        read_only_fields = ['id', 'post_transaction_amount', 'transaction_type_name',
-                            'transaction_method_name']
+        fields = [
+            'id',
+            'transaction_amount',
+            'post_transaction_amount',
+            'transaction_details',
+            'transaction_type',
+            'transaction_type_name',
+            'transaction_method',
+            'transaction_method_name',
+            'transaction_timestamp',
+        ]
+        read_only_fields = [
+            'id',
+            'post_transaction_amount',
+            'transaction_type_name',
+            'transaction_method_name',
+        ]
 
     def get_transaction_type_name(self, obj):
         return dict(TRANSACTION_TYPE).get(obj.transaction_type, '기타')
@@ -123,14 +151,18 @@ class TransactionHistorySerializer(serializers.ModelSerializer):
 class TransactionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionHistory
-        fields = ['transaction_amount', 'transaction_details', 'transaction_type',
-                  'transaction_method', 'transaction_timestamp']
+        fields = [
+            'transaction_amount',
+            'transaction_details',
+            'transaction_type',
+            'transaction_method',
+            'transaction_timestamp',
+        ]
 
     def validate_transaction_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("거래 금액은 0보다 커야 합니다.")
         return value
-
 
     def validate_transaction_type(self, value):
         valid_types = [type_code for type_code, _ in TRANSACTION_TYPE]

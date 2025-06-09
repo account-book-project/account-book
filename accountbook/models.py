@@ -77,15 +77,12 @@ class Account(models.Model):
         on_delete=models.CASCADE,
         related_name='accounts',
         verbose_name='사용자',
-
     )
     account_number = models.CharField(
         max_length=30,
         unique=True,
         verbose_name='계좌번호',
-        error_messages={
-            'unique': "이미 존재하는 계좌번호입니다."
-        }
+        error_messages={'unique': "이미 존재하는 계좌번호입니다."},
     )
 
     bank_code = models.CharField(
