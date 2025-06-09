@@ -5,6 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .constants import ACCOUNT_TYPE, BANK_CODES, TRANSACTION_METHOD, TRANSACTION_TYPE
 from .models import Account, TransactionHistory
+from .utils import send_verification_email
 
 User = get_user_model()
 
@@ -39,7 +40,10 @@ class SignupSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
+        user.is_active = False
         user.save()
+        send_verification_email(user)  # 이메일전송
+
         return user
 
 

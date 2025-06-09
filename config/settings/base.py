@@ -1,8 +1,23 @@
+import json
+import os
 from datetime import timedelta
 from pathlib import Path
 
 # 기본 경로
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# secret.json 읽기
+with open(os.path.join(BASE_DIR, 'config', 'secret.json')) as f:
+    secrets = json.load(f)
+
+
+# 🔥 get_secret 함수 정의
+def get_secret(setting):
+    try:
+        return secrets[setting]
+    except KeyError:
+        raise Exception(f"Set the {setting} setting in secret.json")
+
 
 # 보안 키
 SECRET_KEY = "django-insecure-개발용-secret-key"  # 하드코딩
@@ -23,11 +38,14 @@ INSTALLED_APPS = [
     "accountbook",
     "core",
     "rest_framework",
-    "rest_framework_simplejwt",  # ✅ 추가
+    "rest_framework_simplejwt",
     "drf_spectacular",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -107,11 +125,14 @@ AUTH_USER_MODEL = 'accountbook.CustomUser'
 # REST Framework 설정
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'accountbook.authentication.CookieJWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  # ✅ Pagination 추가
-    'PAGE_SIZE': 10,  # ✅ Pagination 추가
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  #  Pagination 추가
+    'PAGE_SIZE': 10,  # Pagination 추가
 }
 
 # JWT 설정
@@ -141,4 +162,48 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_PATH_PREFIX': r'/api/',
+    'SERVE_PERMISSIONS': [
+        'rest_framework.permissions.AllowAny'
+    ],  #  Swagger 접근 허용 / # 배포시 삭제하거나 관리자만 Swagger 접속변경필요
 }
+
+
+# 환경변수로 개발/운영 구분
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')  # 기본값: 개발
+
+if DJANGO_ENV == 'production':
+    COOKIE_SECURE = True
+else:
+    COOKIE_SECURE = False
+
+# CORS 설정
+CORS_ALLOW_CREDENTIALS = True
+
+if DJANGO_ENV == 'production':
+    # 운영환경 세팅
+    CORS_ALLOWED_ORIGINS = [
+        "https://yourfrontenddomain.com",
+    ]
+
+    # CSRF / SESSION 쿠키를 HTTPS에서만 주고받게 설정
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+else:
+    # 개발환경 세팅
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+    ]
+
+    # 로컬에서는 Secure 강제하지 않음
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+
+# Email 인증
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = get_secret('EMAIL_HOST')
+EMAIL_PORT = get_secret('EMAIL_PORT')
+EMAIL_HOST_USER = get_secret('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_secret('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = get_secret('EMAIL_USE_TLS')
+EMAIL_USE_SSL = get_secret('EMAIL_USE_SSL')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
