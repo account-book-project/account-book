@@ -2,6 +2,9 @@ import json
 import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # 기본 경로
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -16,7 +19,10 @@ def get_secret(setting):
         raise Exception(f"Set the {setting} setting in secret.json")
 
 # 보안 키
-SECRET_KEY = get_secret("SECRET_KEY")
+if os.getenv("DJANGO_ENV") == "production":
+    SECRET_KEY = os.environ["SECRET_KEY"]
+else:
+    SECRET_KEY = get_secret("SECRET_KEY")
 
 # 기본 디버그
 DEBUG = True  # dev.py, prod.py에서 따로 override
