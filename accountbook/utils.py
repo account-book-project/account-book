@@ -4,6 +4,7 @@ from django.core.mail import send_mail
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+
 def send_verification_email(user):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
@@ -21,4 +22,3 @@ def send_verification_email(user):
         recipient_list=[user.email],
         fail_silently=False,
     )
-

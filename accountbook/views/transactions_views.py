@@ -1,15 +1,15 @@
 # accountbook/views/transactions_views.py
 
+from django.core.cache import cache
+from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
-from django.db.models import Q
-from django.db import transaction
-from django.core.cache import cache
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 
 from ..models import Account, TransactionHistory
 from ..serializers import TransactionCreateSerializer, TransactionHistorySerializer
@@ -74,11 +74,21 @@ class TransactionListCreateView(generics.ListCreateAPIView):
             filters &= Q(transaction_timestamp__date__lte=parse_date(end_date))
 
         # 최적화된 쿼리셋 반환
-        return TransactionHistory.objects.filter(filters).select_related('account').only(
-            'id', 'transaction_amount', 'post_transaction_amount',
-            'transaction_details', 'transaction_type', 'transaction_method',
-            'transaction_timestamp', 'account'
-        ).order_by('-transaction_timestamp')
+        return (
+            TransactionHistory.objects.filter(filters)
+            .select_related('account')
+            .only(
+                'id',
+                'transaction_amount',
+                'post_transaction_amount',
+                'transaction_details',
+                'transaction_type',
+                'transaction_method',
+                'transaction_timestamp',
+                'account',
+            )
+            .order_by('-transaction_timestamp')
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -221,9 +231,13 @@ class TransactionDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         account_id = self.kwargs['account_id']
         # select_related로 계좌 정보 미리 로드
-        return TransactionHistory.objects.filter(
-            account__id=account_id, account__user=self.request.user
-        ).select_related('account').order_by('-transaction_timestamp')
+        return (
+            TransactionHistory.objects.filter(
+                account__id=account_id, account__user=self.request.user
+            )
+            .select_related('account')
+            .order_by('-transaction_timestamp')
+        )
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

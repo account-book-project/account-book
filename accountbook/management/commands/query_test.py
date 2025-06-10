@@ -1,11 +1,13 @@
+from datetime import timedelta
+
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import connection, reset_queries
-from accountbook.models import Account, TransactionHistory
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from datetime import timedelta
 from django.db.models import Prefetch
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
+
+from accountbook.models import Account, TransactionHistory
 
 User = get_user_model()
 
@@ -16,7 +18,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         user = User.objects.first()
         if not user:
-            user = User.objects.create_user(email='test@example.com', password='test1234')
+            user = User.objects.create_user(
+                email='test@example.com', password='test1234'
+            )
 
         self.stdout.write("기존 데이터 삭제 중...")
         TransactionHistory.objects.filter(account__user=user).delete()
@@ -27,7 +31,7 @@ class Command(BaseCommand):
             account, created = Account.objects.get_or_create(
                 user=user,
                 account_number=f"ACC{i}",
-                defaults={'bank_code': '001', 'account_type': 'CHECKING', 'balance': 0}
+                defaults={'bank_code': '001', 'account_type': 'CHECKING', 'balance': 0},
             )
             for j in range(50):
                 TransactionHistory.objects.create(
@@ -59,7 +63,9 @@ class Command(BaseCommand):
 
         # 2. 단순 prefetch_related (최적화) - 격리된 테스트
         with CaptureQueriesContext(connection) as ctx2:
-            accounts_optimized = Account.objects.filter(user=user).prefetch_related('transactions')
+            accounts_optimized = Account.objects.filter(user=user).prefetch_related(
+                'transactions'
+            )
             for account in accounts_optimized:
                 for transaction in account.transactions.all():
                     _ = transaction.transaction_amount
@@ -71,21 +77,27 @@ class Command(BaseCommand):
         with CaptureQueriesContext(connection) as ctx3:
             deposit_qs = TransactionHistory.objects.filter(transaction_type='DEPOSIT')
             accounts_prefetch = Account.objects.filter(user=user).prefetch_related(
-                Prefetch('transactions', queryset=deposit_qs, to_attr='deposit_transactions')
+                Prefetch(
+                    'transactions', queryset=deposit_qs, to_attr='deposit_transactions'
+                )
             )
             for account in accounts_prefetch:
                 # 수정된 부분: account.transactions.all() 대신 account.deposit_transactions 사용
                 for transaction in account.deposit_transactions:
                     _ = transaction.transaction_amount
 
-        self.stdout.write(f"조건 Prefetch(입금만) 쿼리 수: {len(ctx3.captured_queries)}")
+        self.stdout.write(
+            f"조건 Prefetch(입금만) 쿼리 수: {len(ctx3.captured_queries)}"
+        )
         log_queries("조건부 Prefetch 쿼리", ctx3.captured_queries)
 
         # 추가 테스트: 다른 관계에 접근하지 않는지 확인
         with CaptureQueriesContext(connection) as ctx4:
             # 모든 관련 데이터를 한 번에 prefetch
-            accounts_full = Account.objects.filter(user=user).select_related('user').prefetch_related(
-                'transactions'
+            accounts_full = (
+                Account.objects.filter(user=user)
+                .select_related('user')
+                .prefetch_related('transactions')
             )
             for account in accounts_full:
                 # user 정보와 transactions 정보만 접근

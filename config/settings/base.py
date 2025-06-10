@@ -94,13 +94,13 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
 # 디버그 툴바가 로컬에서만 보이도록 설정
 INTERNAL_IPS = [
-    '127.0.0.1',       # 기본 로컬호스트
+    '127.0.0.1',  # 기본 로컬호스트
 ]
 
 # 비밀번호 검증
@@ -179,12 +179,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/",
-    "SERVE_PERMISSIONS": [
-        "rest_framework.permissions.AllowAny"
-    ],
-    "SECURITY": [{"bearerAuth": []}],   # 권한설정
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "SECURITY": [{"bearerAuth": []}],  # 권한설정
     "COMPONENTS": {
-        "securitySchemes": {             # 권한설정
+        "securitySchemes": {  # 권한설정
             "bearerAuth": {
                 "type": "http",
                 "scheme": "bearer",
@@ -195,14 +193,13 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-
 # 환경변수로 개발/운영 구분
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 
 if DJANGO_ENV == 'production':
     BASE_URL = "https://yourdomain.com"  # 운영 서버 주소로!
 else:
-    BASE_URL = "http://localhost:8000"   # 개발 환경
+    BASE_URL = "http://localhost:8000"  # 개발 환경
 
 # CORS 설정
 CORS_ALLOW_CREDENTIALS = True

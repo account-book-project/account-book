@@ -1,21 +1,23 @@
 # accountbook/views/accounts_views.py
 
 import logging
-from django.db import transaction
+
 from django.core.cache import cache
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
 
 from ..models import Account
-from ..serializers import AccountCreateSerializer, AccountSerializer
 from ..permissions import IsAccountOwner
+from ..serializers import AccountCreateSerializer, AccountSerializer
 
 logger = logging.getLogger('accountbook.accounts')
+
 
 class AccountListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -33,11 +35,16 @@ class AccountListCreateView(generics.ListCreateAPIView):
         if not queryset:
 
             queryset = Account.objects.filter(user=user).only(
-                'id', 'account_number', 'bank_code', 'account_type', 'balance', 'created_at'
+                'id',
+                'account_number',
+                'bank_code',
+                'account_type',
+                'balance',
+                'created_at',
             )
 
             queryset_list = list(queryset)
-            cache.set(cache_key, queryset_list, timeout=60*5)
+            cache.set(cache_key, queryset_list, timeout=60 * 5)
             return queryset_list
 
         return queryset
@@ -52,7 +59,7 @@ class AccountListCreateView(generics.ListCreateAPIView):
         description="로그인한 사용자의 계좌 목록을 조회합니다.",
         responses={200: AccountSerializer(many=True)},
     )
-    @method_decorator(cache_page(60*5))
+    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         request._cache_update_cache = True
         request._cache_key = f'account_list_view_{request.user.id}'
@@ -81,7 +88,9 @@ class AccountListCreateView(generics.ListCreateAPIView):
         if create_count >= 5:
             logger.warning(f"Account creation rate limit exceeded for user {user_id}")
             return Response(
-                {"message": "계좌 생성 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."},
+                {
+                    "message": "계좌 생성 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+                },
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
@@ -95,7 +104,10 @@ class AccountListCreateView(generics.ListCreateAPIView):
             logger.info(f"Account created: {account.id} by user {user_id}")
 
             return Response(
-                {"message": "계좌가 성공적으로 생성되었습니다.", "account_id": account.id},
+                {
+                    "message": "계좌가 성공적으로 생성되었습니다.",
+                    "account_id": account.id,
+                },
                 status=status.HTTP_201_CREATED,
             )
         except Exception as e:
@@ -105,6 +117,7 @@ class AccountListCreateView(generics.ListCreateAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+
 class AccountDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = [IsAuthenticated, IsAccountOwner]
     serializer_class = AccountSerializer
@@ -112,7 +125,13 @@ class AccountDetailView(generics.RetrieveDestroyAPIView):
 
     def get_queryset(self):
         return Account.objects.filter(user=self.request.user).only(
-            'id', 'account_number', 'bank_code', 'account_type', 'balance', 'created_at', 'user_id'
+            'id',
+            'account_number',
+            'bank_code',
+            'account_type',
+            'balance',
+            'created_at',
+            'user_id',
         )
 
     @extend_schema(
@@ -129,7 +148,7 @@ class AccountDetailView(generics.RetrieveDestroyAPIView):
 
         response = super().get(request, *args, **kwargs)
         if response.status_code == 200:
-            cache.set(cache_key, response.data, timeout=60*5)
+            cache.set(cache_key, response.data, timeout=60 * 5)
         return response
 
     @extend_schema(
@@ -147,7 +166,9 @@ class AccountDetailView(generics.RetrieveDestroyAPIView):
         try:
             instance = self.get_object()
             if instance.user.id != user_id:
-                logger.warning(f"Unauthorized account deletion attempt: User {user_id} tried to delete account {account_id}")
+                logger.warning(
+                    f"Unauthorized account deletion attempt: User {user_id} tried to delete account {account_id}"
+                )
                 raise PermissionDenied("이 계좌를 삭제할 권한이 없습니다.")
 
             logger.info(f"Account deleted: {account_id} by user {user_id}")
@@ -158,9 +179,10 @@ class AccountDetailView(generics.RetrieveDestroyAPIView):
         except PermissionDenied as e:
             return Response({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
-            logger.error(f"Account deletion failed: {account_id} by user {user_id}, error: {str(e)}")
+            logger.error(
+                f"Account deletion failed: {account_id} by user {user_id}, error: {str(e)}"
+            )
             return Response(
                 {"message": "계좌 삭제 중 오류가 발생했습니다."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-

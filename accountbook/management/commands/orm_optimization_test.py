@@ -1,12 +1,15 @@
-from django.core.management.base import BaseCommand
-from django.db import connection
-from django.contrib.auth import get_user_model
-from accountbook.models import Account, TransactionHistory
-from django.db.models import Count, Sum
-from django.utils import timezone
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+from django.db import connection
+from django.db.models import Count, Sum
+from django.utils import timezone
+
+from accountbook.models import Account, TransactionHistory
+
 User = get_user_model()
+
 
 class Command(BaseCommand):
     help = 'ORM 최적화 기능 테스트 및 쿼리 수 비교'
@@ -44,13 +47,17 @@ class Command(BaseCommand):
 
         # annotate 테스트
         connection.queries.clear()
-        accounts = Account.objects.filter(user=user).annotate(transaction_count=Count('transactions'))
+        accounts = Account.objects.filter(user=user).annotate(
+            transaction_count=Count('transactions')
+        )
         list(accounts)
         self.stdout.write(f"Annotate 쿼리 수: {len(connection.queries)}")
 
         # aggregate 테스트
         connection.queries.clear()
-        total = TransactionHistory.objects.filter(account__user=user).aggregate(total_amount=Sum('transaction_amount'))
+        total = TransactionHistory.objects.filter(account__user=user).aggregate(
+            total_amount=Sum('transaction_amount')
+        )
         self.stdout.write(f"Aggregate 쿼리 수: {len(connection.queries)}")
         self.stdout.write(f"Aggregate 총합: {total['total_amount']}")
 

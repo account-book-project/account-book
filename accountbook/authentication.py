@@ -1,5 +1,6 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+
 class CookieJWTAuthentication(JWTAuthentication):
     def authenticate(self, request):
         header = self.get_header(request)
@@ -18,4 +19,3 @@ class CookieJWTAuthentication(JWTAuthentication):
             return None
 
         return self.get_user(validated_token), validated_token
-

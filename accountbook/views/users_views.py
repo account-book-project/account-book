@@ -1,15 +1,15 @@
 # accountbook/views/users_views.py
 
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.core.cache import cache
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 
 from ..serializers import UserSerializer, UserUpdateSerializer
 
@@ -34,9 +34,11 @@ class UserProfileView(APIView):
             return Response(cached_data)
 
         # 캐시에 없으면 DB에서 조회 (필요한 필드만 선택)
-        user = User.objects.filter(id=user_id).only(
-            'id', 'email', 'nickname', 'name', 'phone_number', 'date_joined'
-        ).first()
+        user = (
+            User.objects.filter(id=user_id)
+            .only('id', 'email', 'nickname', 'name', 'phone_number', 'date_joined')
+            .first()
+        )
 
         serializer = UserSerializer(user)
 
@@ -56,7 +58,11 @@ class UserProfileView(APIView):
     @transaction.atomic
     def patch(self, request):
         # 업데이트할 필드만 추출
-        update_fields = {k: v for k, v in request.data.items() if k in ['nickname', 'name', 'phone_number']}
+        update_fields = {
+            k: v
+            for k, v in request.data.items()
+            if k in ['nickname', 'name', 'phone_number']
+        }
 
         serializer = UserUpdateSerializer(
             request.user, data=update_fields, partial=True, context={'request': request}

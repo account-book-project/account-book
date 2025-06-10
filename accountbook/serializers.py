@@ -62,7 +62,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def validate_nickname(self, value):
         user = self.context['request'].user
-        if User.objects.filter(nickname=value).exclude(id=user.id).values('id').exists():
+        if (
+            User.objects.filter(nickname=value)
+            .exclude(id=user.id)
+            .values('id')
+            .exists()
+        ):
             raise serializers.ValidationError("이미 사용 중인 닉네임입니다.")
         return value
 
@@ -203,7 +208,9 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         if transaction_type == 'DEPOSIT':
             Account.objects.filter(pk=account.pk).update(balance=F('balance') + amount)
         elif transaction_type == 'WITHDRAW':
-            updated = Account.objects.filter(pk=account.pk, balance__gte=amount).update(balance=F('balance') - amount)
+            updated = Account.objects.filter(pk=account.pk, balance__gte=amount).update(
+                balance=F('balance') - amount
+            )
             if not updated:
                 raise serializers.ValidationError("잔액이 부족합니다.")
 
@@ -215,4 +222,3 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         validated_data['post_transaction_amount'] = account.balance
 
         return super().create(validated_data)
-

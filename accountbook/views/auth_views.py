@@ -1,21 +1,22 @@
 # accountbook/views/auth_views.py
 
 import logging
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.conf import settings
-from django.db import transaction
 from django.core.cache import cache
+from django.db import transaction
+from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from drf_spectacular.utils import extend_schema
-from django.utils import timezone
 
 from ..serializers import SignupSerializer
 
@@ -53,7 +54,9 @@ class SignupView(generics.CreateAPIView):
         if signup_attempts >= 3:
             logger.warning(f"Signup rate limit exceeded from IP: {ip_address}")
             return Response(
-                {"message": "회원가입 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."},
+                {
+                    "message": "회원가입 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+                },
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
@@ -116,7 +119,9 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
                 # 5분 내 5회 이상 실패 시 잠금
                 if login_attempts >= 5:
-                    logger.warning(f"Login rate limit exceeded: {username} from {ip_address}")
+                    logger.warning(
+                        f"Login rate limit exceeded: {username} from {ip_address}"
+                    )
                     return Response(
                         {"message": "너무 많은 로그인 시도. 5분 후에 다시 시도하세요."},
                         status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -169,7 +174,9 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 # 로그인 실패 시 시도 횟수 증가
                 if username:
                     cache.set(cache_key, login_attempts + 1, timeout=60 * 5)  # 5분 유효
-                    logger.warning(f"Failed login attempt: {username} from {ip_address}")
+                    logger.warning(
+                        f"Failed login attempt: {username} from {ip_address}"
+                    )
 
             return response
         except Exception as e:
@@ -269,14 +276,18 @@ class ActivateUserView(APIView):
             user = User.objects.filter(pk=uid).only('id', 'is_active', 'email').first()
 
             if not user:
-                logger.warning(f"Invalid activation attempt from {ip_address}: User not found for uid {uid}")
+                logger.warning(
+                    f"Invalid activation attempt from {ip_address}: User not found for uid {uid}"
+                )
                 return Response(
                     {"message": "유효하지 않은 인증 링크입니다."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             if user.is_active:
-                logger.info(f"Activation attempt from {ip_address} for already active user: {user.id}")
+                logger.info(
+                    f"Activation attempt from {ip_address} for already active user: {user.id}"
+                )
                 return Response(
                     {"message": "이미 인증된 계정입니다."},
                     status=status.HTTP_200_OK,
@@ -290,13 +301,18 @@ class ActivateUserView(APIView):
                 # 인증 완료 상태 캐싱 (1시간)
                 cache.set(cache_key, True, timeout=60 * 60)
 
-                logger.info(f"User activated successfully from {ip_address}: {user.id} ({user.email})")
+                logger.info(
+                    f"User activated successfully from {ip_address}: {user.id} ({user.email})"
+                )
 
                 return Response(
-                    {"message": "이메일 인증이 완료되었습니다."}, status=status.HTTP_200_OK
+                    {"message": "이메일 인증이 완료되었습니다."},
+                    status=status.HTTP_200_OK,
                 )
             else:
-                logger.warning(f"Invalid token for user activation from {ip_address}: {user.id}")
+                logger.warning(
+                    f"Invalid token for user activation from {ip_address}: {user.id}"
+                )
                 return Response(
                     {"message": "유효하지 않은 인증 링크입니다."},
                     status=status.HTTP_400_BAD_REQUEST,
