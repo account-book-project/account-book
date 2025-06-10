@@ -2,6 +2,7 @@ import json
 import os
 from datetime import timedelta
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,11 +13,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 with open(os.path.join(BASE_DIR, 'config', 'secret.json')) as f:
     secrets = json.load(f)
 
+
 def get_secret(setting):
     try:
         return secrets[setting]
     except KeyError:
         raise Exception(f"Set the {setting} setting in secret.json")
+
 
 # 보안 키
 if os.getenv("DJANGO_ENV") == "production":
