@@ -6,21 +6,17 @@ from pathlib import Path
 # 기본 경로
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# secret.json 읽기
 with open(os.path.join(BASE_DIR, 'config', 'secret.json')) as f:
     secrets = json.load(f)
 
-
-# 🔥 get_secret 함수 정의
 def get_secret(setting):
     try:
         return secrets[setting]
     except KeyError:
         raise Exception(f"Set the {setting} setting in secret.json")
 
-
 # 보안 키
-SECRET_KEY = "django-insecure-개발용-secret-key"  # 하드코딩
+SECRET_KEY = get_secret("SECRET_KEY")
 
 # 기본 디버그
 DEBUG = True  # dev.py, prod.py에서 따로 override
