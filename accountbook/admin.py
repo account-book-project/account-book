@@ -16,8 +16,10 @@ class CustomUserAdmin(UserAdmin):
         'is_staff',
         'last_login',
     )
-    search_fields = ('email', 'nickname', 'name')
+    search_fields = ('email', 'nickname', 'name', 'phone_number')
     ordering = ('-date_joined',)
+    list_filter = ('is_active', 'is_staff')  #  필터링 조건 추가
+    readonly_fields = ('last_login', 'is_admin')  #  수정 불가 필드 설정
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
@@ -28,14 +30,14 @@ class CustomUserAdmin(UserAdmin):
                 'fields': (
                     'is_active',
                     'is_staff',
-                    'is_admin',
+                    'is_admin',  # 읽기 전용 처리됨
                     'is_superuser',
                     'groups',
                     'user_permissions',
                 )
             },
         ),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        ('Important dates', {'fields': ('date_joined',)}),  #  last_login 제거
     )
 
 
