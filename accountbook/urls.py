@@ -5,11 +5,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .serializers import MyTokenObtainPairSerializer
 from .views import (
+    AccountDetailView,
     AccountListCreateView,
     ActivateUserView,
     CookieTokenObtainPairView,
     LogoutView,
     SignupView,
+    TransactionDetailView,
     TransactionListCreateView,
     UserProfileView,
 )
@@ -45,5 +47,13 @@ urlpatterns = [
         'accounts/<int:account_id>/transactions/',
         TransactionListCreateView.as_view(),
         name='transaction_list_create',
+    ),
+    path(
+        "accounts/<int:account_id>/", AccountDetailView.as_view(), name="account-detail"
+    ),
+    path(
+        "accounts/<int:account_id>/transactions/<int:pk>/",
+        TransactionDetailView.as_view(),
+        name="transaction-detail",
     ),
 ]

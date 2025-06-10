@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+from django.utils.dateparse import parse_date
 from django.utils.http import urlsafe_base64_decode
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from rest_framework import generics, status
@@ -155,9 +156,31 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         account_id = self.kwargs.get('account_id')
         account = get_object_or_404(Account, id=account_id, user=self.request.user)
-        return TransactionHistory.objects.filter(account=account).order_by(
-            '-transaction_timestamp'
-        )
+        queryset = TransactionHistory.objects.filter(account=account)
+
+        # 필터링 파라미터
+        transaction_type = self.request.query_params.get('transaction_type')
+        min_amount = self.request.query_params.get('min_amount')
+        max_amount = self.request.query_params.get('max_amount')
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+
+        if transaction_type in ['DEPOSIT', 'WITHDRAW']:
+            queryset = queryset.filter(transaction_type=transaction_type)
+        if min_amount:
+            queryset = queryset.filter(transaction_amount__gte=min_amount)
+        if max_amount:
+            queryset = queryset.filter(transaction_amount__lte=max_amount)
+        if start_date:
+            queryset = queryset.filter(
+                transaction_timestamp__date__gte=parse_date(start_date)
+            )
+        if end_date:
+            queryset = queryset.filter(
+                transaction_timestamp__date__lte=parse_date(end_date)
+            )
+
+        return queryset.order_by('-transaction_timestamp')
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -169,7 +192,39 @@ class TransactionListCreateView(generics.ListCreateAPIView):
 
     @extend_schema(
         summary="거래내역 목록 조회",
-        description="특정 계좌의 거래내역 목록을 조회합니다.",
+        description="특정 계좌의 거래내역 목록을 조회합니다. 거래유형, 금액범위, 날짜범위 필터링이 가능합니다.",
+        parameters=[
+            OpenApiParameter(
+                name='transaction_type',
+                description='거래 유형 (DEPOSIT / WITHDRAW)',
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name='min_amount',
+                description='최소 거래 금액',
+                required=False,
+                type=int,
+            ),
+            OpenApiParameter(
+                name='max_amount',
+                description='최대 거래 금액',
+                required=False,
+                type=int,
+            ),
+            OpenApiParameter(
+                name='start_date',
+                description='조회 시작일 (YYYY-MM-DD)',
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name='end_date',
+                description='조회 종료일 (YYYY-MM-DD)',
+                required=False,
+                type=str,
+            ),
+        ],
         responses={200: TransactionHistorySerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
@@ -298,3 +353,78 @@ class ActivateUserView(APIView):
                 {"message": "유효하지 않은 인증 링크입니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+# 계좌 삭제 API 구현
+class AccountDetailView(generics.RetrieveDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AccountSerializer
+    lookup_url_kwarg = 'account_id'
+
+    def get_queryset(self):
+        # 본인 계좌만 삭제 가능
+        return Account.objects.filter(user=self.request.user)
+
+    @extend_schema(
+        summary="계좌 삭제",
+        description="특정 계좌를 삭제합니다. 본인의 계좌만 삭제할 수 있습니다.",
+        responses={
+            200: {"type": "object", "properties": {"message": {"type": "string"}}}
+        },
+    )
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"message": "계좌가 삭제되었습니다."}, status=200)
+
+
+# 거래내역 조회, 수정, 삭제
+class TransactionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        account_id = self.kwargs['account_id']
+        return TransactionHistory.objects.filter(
+            account__id=account_id, account__user=self.request.user
+        )
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return TransactionCreateSerializer
+        return TransactionHistorySerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        account_id = self.kwargs['account_id']
+        context['account'] = get_object_or_404(
+            Account, id=account_id, user=self.request.user
+        )
+        return context
+
+    @extend_schema(
+        summary="거래내역 상세 조회",
+        responses={200: TransactionHistorySerializer},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="거래내역 수정",
+        request=TransactionCreateSerializer,
+        responses={
+            200: {"type": "object", "properties": {"message": {"type": "string"}}}
+        },
+    )
+    def patch(self, request, *args, **kwargs):
+        response = super().partial_update(request, *args, **kwargs)
+        return Response({"message": "거래내역이 수정되었습니다."}, status=200)
+
+    @extend_schema(
+        summary="거래내역 삭제",
+        responses={
+            200: {"type": "object", "properties": {"message": {"type": "string"}}}
+        },
+    )
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        return Response({"message": "거래내역이 삭제되었습니다."}, status=200)
