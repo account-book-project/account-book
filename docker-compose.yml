@@ -32,6 +32,9 @@ services:
       - "8000:8000"
     environment: # 컨테이너 환경변수 설정
       - DJANGO_SETTINGS_MODULE=config.settings.prod
+      - DJANGO_ENV=production
+      - REDIS_HOST=my-redis
+
     depends_on:
       my-db:
         condition: service_healthy
