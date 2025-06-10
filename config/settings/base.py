@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",  # <-- 여기!
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -85,6 +87,21 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# 디버그 툴바가 로컬에서만 보이도록 설정
+INTERNAL_IPS = [
+    '127.0.0.1',       # 기본 로컬호스트
+]
 
 # 비밀번호 검증
 AUTH_PASSWORD_VALIDATORS = [
@@ -156,25 +173,36 @@ SIMPLE_JWT = {
 
 # drf-spectacular 설정
 SPECTACULAR_SETTINGS = {
-    'TITLE': '가계부 API',
-    'DESCRIPTION': 'Django REST Framework 기반 가계부 API',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
-    'SCHEMA_PATH_PREFIX': r'/api/',
-    'SERVE_PERMISSIONS': [
-        'rest_framework.permissions.AllowAny'
-    ],  #  Swagger 접근 허용 / # 배포시 삭제하거나 관리자만 Swagger 접속변경필요
+    "TITLE": "가계부 API",
+    "DESCRIPTION": "Django REST Framework 기반 가계부 API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
+    "SERVE_PERMISSIONS": [
+        "rest_framework.permissions.AllowAny"
+    ],
+    "SECURITY": [{"bearerAuth": []}],   # 권한설정
+    "COMPONENTS": {
+        "securitySchemes": {             # 권한설정
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
 }
 
 
+
 # 환경변수로 개발/운영 구분
-DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')  # 기본값: 개발
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 
 if DJANGO_ENV == 'production':
-    COOKIE_SECURE = True
+    BASE_URL = "https://yourdomain.com"  # 운영 서버 주소로!
 else:
-    COOKIE_SECURE = False
+    BASE_URL = "http://localhost:8000"   # 개발 환경
 
 # CORS 설정
 CORS_ALLOW_CREDENTIALS = True
@@ -188,6 +216,8 @@ if DJANGO_ENV == 'production':
     # CSRF / SESSION 쿠키를 HTTPS에서만 주고받게 설정
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    COOKIE_SECURE = True
+
 else:
     # 개발환경 세팅
     CORS_ALLOWED_ORIGINS = [
@@ -197,6 +227,7 @@ else:
     # 로컬에서는 Secure 강제하지 않음
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
+    COOKIE_SECURE = True
 
 # Email 인증
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
