@@ -92,11 +92,15 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+# 분기 설정 for redis
+REDIS_HOST = "127.0.0.1"
+if os.getenv("DJANGO_ENV") == "production":
+    REDIS_HOST = "my-redis"
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
