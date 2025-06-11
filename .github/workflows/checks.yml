@@ -81,7 +81,12 @@ jobs:
       - name: Validate Compose configuration
         run: docker compose -f docker-compose.yml config
 
-      # 4) 컨테이너 내에서 포맷 검사 · 마이그레이션 · 테스트
+      # 3-1) 소유권 문제 해결 safe 설정
+      - name: Mark /app as safe Git directory
+        run: docker compose exec my-django git config --global --add safe.directory /app
+
+
+      # 4) 컨테이너 내에서 포맷 검사 마이그레이션  테스트
       - name: Run all checks inside container
         run: |
           docker compose exec my-django bash -lc "\
