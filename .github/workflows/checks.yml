@@ -2,7 +2,7 @@ name: Code Quality Checks
 
 on:
   push:
-    branches: ['**']
+    branches: ["**"]
   pull_request:
 
 jobs:
@@ -76,5 +76,6 @@ jobs:
       - name: Cleanup containers
         if: always()
         run: docker compose down --volumes --remove-orphans
+
 
 
