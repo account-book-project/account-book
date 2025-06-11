@@ -11,32 +11,26 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
-def get_secret(setting, secrets_file):
-    try:
-        return secrets_file[setting]
-    except KeyError:
-        raise Exception(f"Set the {setting} setting in secret.json")
+dotenv_files = [BASE_DIR / '.env.local', BASE_DIR / '.env']
+for dotenv_path in dotenv_files:
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path, override=True)
 
+# 2. 환경변수로부터 값 불러오기
+SECRET_KEY = os.getenv('SECRET_KEY')
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'false') == 'true'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'false') == 'true'
 
-if os.getenv("DJANGO_ENV") == "production":
-    SECRET_KEY = os.environ["SECRET_KEY"]
-    EMAIL_HOST = os.environ["EMAIL_HOST"]
-    EMAIL_PORT = int(os.environ["EMAIL_PORT"])
-    EMAIL_HOST_USER = os.environ["EMAIL_HOST_USER"]
-    EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
-    EMAIL_USE_TLS = os.environ["EMAIL_USE_TLS"] == "true"
-    EMAIL_USE_SSL = os.environ["EMAIL_USE_SSL"] == "true"
-else:
-    secret_path = os.path.join(BASE_DIR, 'config', 'secret.json')
-    with open(secret_path) as f:
-        secrets = json.load(f)
-    SECRET_KEY = get_secret("SECRET_KEY", secrets)
-    EMAIL_HOST = get_secret("EMAIL_HOST", secrets)
-    EMAIL_PORT = int(get_secret("EMAIL_PORT", secrets))
-    EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER", secrets)
-    EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD", secrets)
-    EMAIL_USE_TLS = secrets["EMAIL_USE_TLS"]
-    EMAIL_USE_SSL = secrets["EMAIL_USE_SSL"]
 
 # 기본 디버그
 DEBUG = True  # dev.py, prod.py에서 따로 override
@@ -96,11 +90,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "django-postgres",
-        "USER": "postgres",
-        "PASSWORD": "qwe123",  # Docker Compose와 맞추기
-        "HOST": "my-db",
-        "PORT": "5432",
+        "NAME": DB_NAME,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
     }
 }
 # 분기 설정 for redis

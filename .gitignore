@@ -139,6 +139,7 @@ docker-compose.override.yml
 
 # Environments
 .env
+.env.local
 .venv
 env/
 venv/

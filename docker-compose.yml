@@ -30,11 +30,14 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-    environment: # 컨테이너 환경변수 설정
+
+    env_file:
+      - .env
+    environment:
       - DJANGO_SETTINGS_MODULE=config.settings.prod
       - DJANGO_ENV=production
       - REDIS_HOST=my-redis
-      - SECRET_KEY=${SECRET_KEY}
+
 
     depends_on:
       my-db:
