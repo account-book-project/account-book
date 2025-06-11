@@ -72,16 +72,16 @@ jobs:
         run: docker compose exec my-django git config --global --add safe.directory /app
 
       - name: Run isort
-        run: docker compose exec -T my-django isort . --check --diff
+        run: docker compose run --rm my-django isort . --check --diff
 
       - name: Run black
-        run: docker compose exec -T my-django black . --check
+        run: docker compose run --rm my-django black . --check
 
       - name: Apply migrations
-        run: docker compose exec -T my-django python manage.py migrate
+        run: docker compose run --rm my-django python manage.py migrate
 
       - name: Run tests
-        run: docker compose exec -T my-django python manage.py test
+        run: docker compose run --rm my-django python manage.py test
 
       - name: Cleanup
         if: always()
