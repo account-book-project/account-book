@@ -12,7 +12,6 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    # Postgres & Redis 서비스만 띄워 둡니다
     services:
       postgres:
         image: postgres:14
@@ -42,11 +41,19 @@ jobs:
           pip install -r requirements.txt
           pip install black isort
 
-      - name: Wait for Postgres
+      - name: Create .env
         run: |
-          until pg_isready -h localhost -p 5432 -U ${{ secrets.PG_USER }}; do
-            sleep 1
-          done
+          cat <<EOF > .env
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          DJANGO_ENV=development
+          DB_NAME=${{ secrets.PG_NAME }}
+          DB_USER=${{ secrets.PG_USER }}
+          DB_PASSWORD=${{ secrets.PG_PASSWORD }}
+          DB_HOST=localhost
+          DB_PORT=5432
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+          EOF
 
       - name: Run isort (import sorting)
         run: isort . --check --diff
@@ -54,21 +61,17 @@ jobs:
       - name: Run black (code formatting)
         run: black . --check
 
-      - name: Django migrations & tests
-        env:
-          # Django settings.py에서 os.getenv로 읽습니다
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DJANGO_ENV: development
-          DB_NAME: ${{ secrets.PG_NAME }}
-          DB_USER: ${{ secrets.PG_USER }}
-          DB_PASSWORD: ${{ secrets.PG_PASSWORD }}
-          DB_HOST: localhost
-          DB_PORT: 5432
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+      - name: Wait for database
+        run: python manage.py wait_for_db
+
+      - name: Apply migrations
         run: |
-          python manage.py wait_for_db
           python manage.py makemigrations --noinput
           python manage.py migrate --noinput
-          python manage.py test
 
+      - name: Run tests
+        run: python manage.py test
+
+      - name: Cleanup services
+        if: always()
+        run: docker compose down --volumes --remove-orphans
