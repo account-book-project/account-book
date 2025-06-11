@@ -35,6 +35,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      # 디버깅: 현재 경로와 파일 리스트 찍어보기
+      - name: Debug workspace
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          pwd
+          ls -al
+          echo "--- Recursive listing ---"
+          ls -R .        
+        
 
       # 1) CI 실행 환경에 .env 생성
       - name: Create .env
