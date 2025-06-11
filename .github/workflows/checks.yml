@@ -69,3 +69,7 @@ jobs:
 
       - name: Cleanup containers
         run: docker compose down --volumes --remove-orphans
+
+      - name: Show my-django logs on failure
+        if: failure()
+        run: docker compose logs my-django
