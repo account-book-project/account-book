@@ -2,8 +2,7 @@ name: Code Quality Checks
 
 on:
   push:
-    branches:
-      - '**'
+    branches: ['**']
   pull_request:
 
 jobs:
@@ -35,14 +34,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug workspace
-        run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          pwd
-          ls -al
-          echo "--- Recursive listing ---"
-          ls -R .
-
       - name: Create .env
         run: |
           cat <<EOF > .env
@@ -62,22 +53,28 @@ jobs:
           EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }}
           EOF
 
-      - name: Build and start containers
-        run: docker compose -f docker-compose.yml up -d --build
+      - name: Build & start containers
+        run: docker compose up -d --build
 
-      - name: Run isort
-        run: docker compose run --rm -T --no-deps --env-file .env my-django isort . --check --diff
+      - name: Wait for services to be healthy
+        run: |
+          sleep 15
+          docker compose ps
 
-      - name: Run black
-        run: docker compose run --rm -T --no-deps --env-file .env my-django black . --check
+      - name: Check code formatting with isort
+        run: docker compose exec -T my-django isort . --check --diff
+
+      - name: Check code formatting with black
+        run: docker compose exec -T my-django black . --check
 
       - name: Apply migrations
-        run: docker compose run --rm -T --no-deps --env-file .env my-django python manage.py migrate
+        run: docker compose exec -T my-django python manage.py migrate --noinput
 
       - name: Run tests
-        run: docker compose run --rm -T --no-deps --env-file .env my-django python manage.py test
+        run: docker compose exec -T my-django python manage.py test
 
-      - name: Cleanup
+      - name: Cleanup containers
         if: always()
-        run: docker compose -f docker-compose.yml down --volumes --remove-orphans
+        run: docker compose down --volumes --remove-orphans
+
 
