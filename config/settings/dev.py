@@ -5,7 +5,7 @@ from .base import *
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 
-print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}") # debugging
+print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}")  # debugging
 
 
 DEBUG = True
