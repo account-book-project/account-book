@@ -66,16 +66,16 @@ jobs:
         run: docker compose -f docker-compose.yml up -d --build
 
       - name: Run isort
-        run: docker compose exec my-django isort . --check --diff
+        run: docker compose run --rm -T --no-deps --env-file .env my-django isort . --check --diff
 
       - name: Run black
-        run: docker compose exec my-django black . --check
+        run: docker compose run --rm -T --no-deps --env-file .env my-django black . --check
 
       - name: Apply migrations
-        run: docker compose exec my-django python manage.py migrate
+        run: docker compose run --rm -T --no-deps --env-file .env my-django python manage.py migrate
 
       - name: Run tests
-        run: docker compose exec my-django python manage.py test
+        run: docker compose run --rm -T --no-deps --env-file .env my-django python manage.py test
 
       - name: Cleanup
         if: always()
