@@ -11,13 +11,32 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      my-db: …      # 그대로
-      my-redis: …   # 그대로
+      my-db:
+        image: postgres:14
+        env:
+          POSTGRES_USER: ${{ secrets.PG_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.PG_NAME }}
+        options: >-
+          --health-cmd pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --memory=512m
+
+      my-redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # 1) Create .env
+      # 1) CI 실행 환경에 .env 생성
       - name: Create .env
         run: |
           cat <<EOF > .env
@@ -37,25 +56,29 @@ jobs:
           EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }}
           EOF
 
-      # 2) Build & Run (abort-on-exit)
-      - name: Build and run
-        run: docker compose up --build --abort-on-container-exit --exit-code-from my-django
+      # 2) 컨테이너 빌드 및 백그라운드 실행
+      - name: Build and start containers
+        run: docker compose -f docker-compose.yml up -d --build
 
-      # 3) Tests, format, migrate 모두 my-django 컨테이너 내에서 실행
+      # 3) Compose 설정 검증
+      - name: Validate Compose configuration
+        run: docker compose -f docker-compose.yml config
+
+      # 4) 컨테이너 내에서 포맷 검사 · 마이그레이션 · 테스트
       - name: Run all checks inside container
         run: |
-          docker compose exec my-django \
-            bash -lc "isort . --check --diff && \
-                       black . --check && \
-                       python manage.py migrate && \
-                       python manage.py test"
+          docker compose exec my-django bash -lc "\
+            isort . --check --diff && \
+            black . --check && \
+            python manage.py migrate && \
+            python manage.py test"
 
-      # 4) Cleanup
+      # 5) 정리
       - name: Cleanup
         if: always()
         run: docker compose down --volumes --remove-orphans
 
+      # 6) 실패 시 로그 출력
       - name: Show logs on failure
         if: failure()
         run: docker compose logs my-django
-
