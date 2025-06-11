@@ -48,6 +48,12 @@ jobs:
       - name: Build and start containers
         run: |
           docker compose up -d --build
+          
+      - name: Wait for my-django to be up (초기 기동 상태 확인)
+        run: |
+          sleep 10
+          docker compose ps
+          docker compose logs my-django
 
       - name: Wait for Database
 
