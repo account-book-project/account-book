@@ -1,13 +1,17 @@
+# .github/workflows/checks.yml
+
 name: Code Quality Checks
 
 on:
   push:
-    branches: ["**"]
+    branches:
+      - main
   pull_request:
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # 환경변수를 워크플로우 레벨에서 설정합니다
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       DJANGO_ENV: development
@@ -29,7 +33,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+          --health-cmd pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -56,7 +60,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .
+          pip install -r requirements.txt
           pip install black isort
 
       - name: Run isort (import sorting)
@@ -65,18 +69,15 @@ jobs:
       - name: Run black (code formatting)
         run: black . --check
 
-      - name: Wait for DB
+      - name: Wait for database
         run: python manage.py wait_for_db
 
-      - name: Django makemigrations & migrate
+      - name: Apply migrations
         run: |
           python manage.py makemigrations --noinput
           python manage.py migrate --noinput
 
-      - name: Run Django tests
+      - name: Run tests
         run: python manage.py test
 
-      - name: Cleanup services
-        if: always()
-        run: docker compose down --volumes --remove-orphans
 
