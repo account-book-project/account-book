@@ -16,7 +16,7 @@ if (BASE_DIR / ".env.local").exists():
 # SECRET_KEY 설정
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}")  # Debugging secret_key
+# print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}")  # Debugging secret_key
 
 REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
 # print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}") Debugging LOCAL 기준인지 배포기준인지 확인

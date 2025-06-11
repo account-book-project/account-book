@@ -76,9 +76,9 @@ jobs:
       # 5) 정리
       - name: Cleanup
         if: always()
-        run: docker compose down --volumes --remove-orphans
+        run: docker compose -f docker-compose.yml down --volumes --remove-orphans
 
       # 6) 실패 시 로그 출력
       - name: Show logs on failure
         if: failure()
-        run: docker compose logs my-django
+        run: docker compose -f docker-compose.yml logs my-django
