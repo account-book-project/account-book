@@ -1,22 +1,21 @@
-import json
 import os
 from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
-
-# 기본 경로
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# 1. .env 먼저 전체 적용
+if (BASE_DIR / ".env").exists():
+    load_dotenv(BASE_DIR / ".env")
+# 2. .env.local로 덮어쓰기 (override=True)
+if (BASE_DIR / ".env.local").exists():
+    load_dotenv(BASE_DIR / ".env.local", override=True)
 
-dotenv_files = [BASE_DIR / '.env.local', BASE_DIR / '.env']
-for dotenv_path in dotenv_files:
-    if dotenv_path.exists():
-        load_dotenv(dotenv_path, override=True)
+REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
+print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}")
 
-# 2. 환경변수로부터 값 불러오기
 SECRET_KEY = os.getenv('SECRET_KEY')
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 DB_NAME = os.getenv('DB_NAME')
@@ -28,16 +27,16 @@ EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'false') == 'true'
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'false') == 'true'
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'false').lower() == 'true'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'false').lower() == 'true'
+REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
 
 
-# 기본 디버그
-DEBUG = True  # dev.py, prod.py에서 따로 override
+print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}")
 
-ALLOWED_HOSTS = ["*"]  # Docker 외부 접속
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
 
-# 앱 등록
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -60,7 +59,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",  # <-- 여기!
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -97,10 +96,6 @@ DATABASES = {
         "PORT": DB_PORT,
     }
 }
-# 분기 설정 for redis
-REDIS_HOST = "127.0.0.1"
-if os.getenv("DJANGO_ENV") == "production":
-    REDIS_HOST = "my-redis"
 
 CACHES = {
     "default": {
@@ -112,48 +107,34 @@ CACHES = {
     }
 }
 
-# 디버그 툴바가 로컬에서만 보이도록 설정
 INTERNAL_IPS = [
-    '127.0.0.1',  # 기본 로컬호스트
+    '127.0.0.1',
 ]
 
-# 비밀번호 검증
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# 국제화
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static 파일
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# 기본 primary key type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 유저 인증
 AUTH_USER_MODEL = 'accountbook.CustomUser'
 
-# REST Framework 설정
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'accountbook.authentication.CookieJWTAuthentication',
@@ -162,11 +143,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  #  Pagination 추가
-    'PAGE_SIZE': 10,  # Pagination 추가
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
-# JWT 설정
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -185,7 +165,6 @@ SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'accountbook.serializers.MyTokenObtainPairSerializer',
 }
 
-# drf-spectacular 설정
 SPECTACULAR_SETTINGS = {
     "TITLE": "가계부 API",
     "DESCRIPTION": "Django REST Framework 기반 가계부 API",
@@ -194,9 +173,9 @@ SPECTACULAR_SETTINGS = {
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
-    "SECURITY": [{"bearerAuth": []}],  # 권한설정
+    "SECURITY": [{"bearerAuth": []}],
     "COMPONENTS": {
-        "securitySchemes": {  # 권한설정
+        "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
                 "scheme": "bearer",
@@ -206,46 +185,24 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-
-# 환경변수로 개발/운영 구분
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
-
 if DJANGO_ENV == 'production':
-    BASE_URL = "https://yourdomain.com"  # 운영 서버 주소로!
+    BASE_URL = "https://yourdomain.com"
 else:
-    BASE_URL = "http://localhost:8000"  # 개발 환경
+    BASE_URL = "http://localhost:8000"
 
-# CORS 설정
 CORS_ALLOW_CREDENTIALS = True
 
 if DJANGO_ENV == 'production':
-    # 운영환경 세팅
-    CORS_ALLOWED_ORIGINS = [
-        "https://yourfrontenddomain.com",
-    ]
-
-    # CSRF / SESSION 쿠키를 HTTPS에서만 주고받게 설정
+    CORS_ALLOWED_ORIGINS = ["https://yourfrontenddomain.com"]
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     COOKIE_SECURE = True
-
 else:
-    # 개발환경 세팅
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-    ]
-
-    # 로컬에서는 Secure 강제하지 않음
+    CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
     COOKIE_SECURE = True
 
-# Email 인증
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = get_secret('EMAIL_HOST')
-EMAIL_PORT = get_secret('EMAIL_PORT')
-EMAIL_HOST_USER = get_secret('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = get_secret('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = get_secret('EMAIL_USE_TLS')
-EMAIL_USE_SSL = get_secret('EMAIL_USE_SSL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
