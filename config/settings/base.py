@@ -13,8 +13,13 @@ if (BASE_DIR / ".env").exists():
 if (BASE_DIR / ".env.local").exists():
     load_dotenv(BASE_DIR / ".env.local", override=True)
 
+# SECRET_KEY 설정
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}") # Debugging secret_key
+
 REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
-print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}")
+# print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}") Debugging LOCAL 기준인지 배포기준인지 확인
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')

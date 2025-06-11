@@ -1,6 +1,13 @@
 # dev.py
 from .base import *
 
+# SECRET_KEY 설정
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+
+print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}") # debugging
+
+
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 

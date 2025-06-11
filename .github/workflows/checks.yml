@@ -11,77 +11,51 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      my-db:
-        image: postgres:14
-        env:
-          POSTGRES_USER: ${{ secrets.PG_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.PG_NAME }}
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --memory=512m
-
-      my-redis:
-        image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+      my-db: …      # 그대로
+      my-redis: …   # 그대로
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
+      # 1) Create .env
       - name: Create .env
         run: |
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-          echo "DJANGO_ENV=production" >> .env
-          echo "DB_NAME=${{ secrets.PG_NAME }}" >> .env
-          echo "DB_USER=${{ secrets.PG_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.PG_PASSWORD }}" >> .env
-          echo "DB_HOST=my-db" >> .env
-          echo "DB_PORT=5432" >> .env
-          echo "EMAIL_HOST=${{ secrets.EMAIL_HOST }}" >> .env
-          echo "EMAIL_PORT=${{ secrets.EMAIL_PORT }}" >> .env
-          echo "EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}" >> .env
-          echo "EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}" >> .env
-          echo "EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }}" >> .env
-          echo "EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }}" >> .env
+          cat <<EOF > .env
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          DJANGO_ENV=production
+          DB_NAME=${{ secrets.PG_NAME }}
+          DB_USER=${{ secrets.PG_USER }}
+          DB_PASSWORD=${{ secrets.PG_PASSWORD }}
+          DB_HOST=my-db
+          DB_PORT=5432
+          REDIS_HOST=my-redis
+          EMAIL_HOST=${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT=${{ secrets.EMAIL_PORT }}
+          EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+          EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }}
+          EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }}
+          EOF
 
-      - name: Build and start containers
-        run: docker compose up -d --build
+      # 2) Build & Run (abort-on-exit)
+      - name: Build and run
+        run: docker compose up --build --abort-on-container-exit --exit-code-from my-django
 
-        # log 확인
-      - name: Wait for my-django to be up
+      # 3) Tests, format, migrate 모두 my-django 컨테이너 내에서 실행
+      - name: Run all checks inside container
         run: |
-          sleep 15
-          docker compose ps
-          docker compose logs my-django
+          docker compose exec my-django \
+            bash -lc "isort . --check --diff && \
+                       black . --check && \
+                       python manage.py migrate && \
+                       python manage.py test"
 
-      - name: Wait for Database
-        run: |
-          sleep 30
-          docker compose exec -T my-django python manage.py wait_for_db
-
-      - name: Check code formatting with isort
-        run: docker compose exec my-django isort . --check --diff
-
-      - name: Check code formatting with black
-        run: docker compose exec my-django black . --check
-
-      - name: Apply migrations
-        run: docker compose exec my-django python manage.py migrate
-
-      - name: Run tests
-        run: docker compose exec my-django python manage.py test
-
-      - name: Cleanup containers
+      # 4) Cleanup
+      - name: Cleanup
+        if: always()
         run: docker compose down --volumes --remove-orphans
 
-      - name: Show my-django logs on failure
+      - name: Show logs on failure
         if: failure()
         run: docker compose logs my-django
+
