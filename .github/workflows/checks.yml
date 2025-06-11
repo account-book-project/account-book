@@ -65,29 +65,19 @@ jobs:
       - name: Build and start containers
         run: docker compose -f docker-compose.yml up -d --build
 
-      - name: Validate Compose configuration
-        run: docker compose -f docker-compose.yml config
-
-      - name: Mark /app as safe Git directory
-        run: docker compose exec my-django git config --global --add safe.directory /app
-
       - name: Run isort
-        run: docker compose run --rm my-django isort . --check --diff
+        run: docker compose exec my-django isort . --check --diff
 
       - name: Run black
-        run: docker compose run --rm my-django black . --check
+        run: docker compose exec my-django black . --check
 
       - name: Apply migrations
-        run: docker compose run --rm my-django python manage.py migrate
+        run: docker compose exec my-django python manage.py migrate
 
       - name: Run tests
-        run: docker compose run --rm my-django python manage.py test
+        run: docker compose exec my-django python manage.py test
 
       - name: Cleanup
         if: always()
         run: docker compose -f docker-compose.yml down --volumes --remove-orphans
-
-      - name: Show logs on failure
-        if: failure()
-        run: docker compose -f docker-compose.yml logs my-django
 
