@@ -10,22 +10,33 @@ load_dotenv()
 # 기본 경로
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-with open(os.path.join(BASE_DIR, 'config', 'secret.json')) as f:
-    secrets = json.load(f)
 
-
-def get_secret(setting):
+def get_secret(setting, secrets_file):
     try:
-        return secrets[setting]
+        return secrets_file[setting]
     except KeyError:
         raise Exception(f"Set the {setting} setting in secret.json")
 
 
-# 보안 키
 if os.getenv("DJANGO_ENV") == "production":
     SECRET_KEY = os.environ["SECRET_KEY"]
+    EMAIL_HOST = os.environ["EMAIL_HOST"]
+    EMAIL_PORT = int(os.environ["EMAIL_PORT"])
+    EMAIL_HOST_USER = os.environ["EMAIL_HOST_USER"]
+    EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
+    EMAIL_USE_TLS = os.environ["EMAIL_USE_TLS"] == "true"
+    EMAIL_USE_SSL = os.environ["EMAIL_USE_SSL"] == "true"
 else:
-    SECRET_KEY = get_secret("SECRET_KEY")
+    secret_path = os.path.join(BASE_DIR, 'config', 'secret.json')
+    with open(secret_path) as f:
+        secrets = json.load(f)
+    SECRET_KEY = get_secret("SECRET_KEY", secrets)
+    EMAIL_HOST = get_secret("EMAIL_HOST", secrets)
+    EMAIL_PORT = int(get_secret("EMAIL_PORT", secrets))
+    EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER", secrets)
+    EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD", secrets)
+    EMAIL_USE_TLS = secrets["EMAIL_USE_TLS"]
+    EMAIL_USE_SSL = secrets["EMAIL_USE_SSL"]
 
 # 기본 디버그
 DEBUG = True  # dev.py, prod.py에서 따로 override
