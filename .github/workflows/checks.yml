@@ -51,9 +51,7 @@ jobs:
 
       - name: Wait for Database
 
-        run: |
-          sleep 20
-          docker compose exec -T my-django python manage.py wait_for_db
+        run: docker compose exec -T my-django python manage.py wait_for_db
 
       - name: Check code formatting with isort
         run: docker compose exec my-django isort . --check --diff
