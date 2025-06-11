@@ -2,7 +2,7 @@ services:
   my-db:
     container_name: postgres
     image: postgres:14
-    mem_limit: 1g
+
     environment:
       - POSTGRES_DB=django-postgres
       - POSTGRES_USER=postgres
@@ -34,7 +34,7 @@ services:
 
   my-django:
     build: .
-    mem_limit: 2g
+
     container_name: django
     working_dir: /app
     volumes:
