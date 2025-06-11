@@ -1,3 +1,5 @@
+# .github/workflows/checks.yml
+
 name: Code Quality Checks
 
 on:
@@ -9,19 +11,10 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    env:
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      DJANGO_ENV: development
-      DB_NAME: ${{ secrets.PG_NAME }}
-      DB_USER: ${{ secrets.PG_USER }}
-      DB_PASSWORD: ${{ secrets.PG_PASSWORD }}
-      DB_HOST: localhost
-      DB_PORT: 5432
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
 
+    # Postgres & Redis 서비스만 띄워 둡니다
     services:
-      my-db:
+      postgres:
         image: postgres:14
         env:
           POSTGRES_USER: ${{ secrets.PG_USER }}
@@ -29,19 +22,10 @@ jobs:
           POSTGRES_DB: ${{ secrets.PG_NAME }}
         ports:
           - 5432:5432
-        options: >-
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      my-redis:
+      redis:
         image: redis:7
         ports:
           - 6379:6379
-        options: >-
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -58,25 +42,33 @@ jobs:
           pip install -r requirements.txt
           pip install black isort
 
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h localhost -p 5432 -U ${{ secrets.PG_USER }}; do
+            sleep 1
+          done
+
       - name: Run isort (import sorting)
         run: isort . --check --diff
 
       - name: Run black (code formatting)
         run: black . --check
 
-      - name: Wait for database
-        run: python manage.py wait_for_db
-
-      - name: Apply migrations
+      - name: Django migrations & tests
+        env:
+          # Django settings.py에서 os.getenv로 읽습니다
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DJANGO_ENV: development
+          DB_NAME: ${{ secrets.PG_NAME }}
+          DB_USER: ${{ secrets.PG_USER }}
+          DB_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          DB_HOST: localhost
+          DB_PORT: 5432
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
         run: |
+          python manage.py wait_for_db
           python manage.py makemigrations --noinput
           python manage.py migrate --noinput
-
-      - name: Run tests
-        run: python manage.py test
-
-      - name: Cleanup services
-        if: always()
-        run: docker compose down --volumes --remove-orphans
-
+          python manage.py test
 
