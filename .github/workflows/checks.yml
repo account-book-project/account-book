@@ -18,7 +18,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
           POSTGRES_DB: ${{ secrets.PG_NAME }}
         options: >-
-          --health-cmd pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+          --health-cmd "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -68,6 +68,14 @@ jobs:
       # 2) 컨테이너 빌드 및 백그라운드 실행
       - name: Build and start containers
         run: docker compose -f docker-compose.yml up -d --build
+
+      - name: Debug workspace
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          pwd
+          ls -al
+          echo "--- recursive ---"
+          ls -R .
 
       # 3) Compose 설정 검증
       - name: Validate Compose configuration
