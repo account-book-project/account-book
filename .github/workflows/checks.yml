@@ -2,28 +2,42 @@ name: Code Quality Checks
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DJANGO_ENV: development
+      DB_NAME: ${{ secrets.PG_NAME }}
+      DB_USER: ${{ secrets.PG_USER }}
+      DB_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      DB_HOST: localhost
+      DB_PORT: 5432
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
 
     services:
-      my-db:
+      postgres:
         image: postgres:14
         env:
           POSTGRES_USER: ${{ secrets.PG_USER }}
           POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
           POSTGRES_DB: ${{ secrets.PG_NAME }}
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-      my-redis:
+      redis:
         image: redis:7
+        ports:
+          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -34,48 +48,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create .env
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
         run: |
-          cat <<EOF > .env
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          DJANGO_ENV=production
-          DB_NAME=${{ secrets.PG_NAME }}
-          DB_USER=${{ secrets.PG_USER }}
-          DB_PASSWORD=${{ secrets.PG_PASSWORD }}
-          DB_HOST=my-db
-          DB_PORT=5432
-          REDIS_HOST=my-redis
-          EMAIL_HOST=${{ secrets.EMAIL_HOST }}
-          EMAIL_PORT=${{ secrets.EMAIL_PORT }}
-          EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
-          EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
-          EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }}
-          EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }}
-          EOF
+          python -m pip install --upgrade pip
+          pip install .
+          pip install black isort
 
-      - name: Build & start containers
-        run: docker compose up -d --build
+      - name: Run isort (import sorting)
+        run: isort . --check --diff
 
-      - name: Wait for services to be healthy
+      - name: Run black (code formatting)
+        run: black . --check
+
+      - name: Wait for DB
+        run: python manage.py wait_for_db
+
+      - name: Django makemigrations & migrate
         run: |
-          sleep 15
-          docker compose ps
+          python manage.py makemigrations --noinput
+          python manage.py migrate --noinput
 
-      - name: Check code formatting with isort
-        run: docker compose exec -T my-django isort . --check --diff
+      - name: Run Django tests
+        run: python manage.py test
 
-      - name: Check code formatting with black
-        run: docker compose exec -T my-django black . --check
-
-      - name: Apply migrations
-        run: docker compose exec -T my-django python manage.py migrate --noinput
-
-      - name: Run tests
-        run: docker compose exec -T my-django python manage.py test
-
-      - name: Cleanup containers
+      - name: Cleanup services
         if: always()
         run: docker compose down --volumes --remove-orphans
-
-
 
