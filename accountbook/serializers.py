@@ -7,7 +7,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .constants import ACCOUNT_TYPE, BANK_CODES, TRANSACTION_METHOD, TRANSACTION_TYPE
 from .models import Account, TransactionHistory
-from .utils import send_verification_email
+from .utils_common import send_verification_email
 
 User = get_user_model()
 

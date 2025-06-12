@@ -34,7 +34,10 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name='schema', permission_classes=[AllowAny]),
         name='redoc',
     ),
+    # include
+    path('oauth/', include('oauth.oauth_urls')),
 ]
+
 
 if settings.DEBUG:
     import debug_toolbar

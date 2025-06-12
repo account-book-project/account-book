@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -21,7 +22,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
 # print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}") Debugging LOCAL 기준인지 배포기준인지 확인
 
-SECRET_KEY = os.getenv('SECRET_KEY')
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "debug_toolbar",
+    "oauth",
 ]
 
 MIDDLEWARE = [
@@ -76,7 +77,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],  # 배포시 체크
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -211,3 +212,10 @@ else:
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# OAuth
+NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
+NAVER_SECRET = os.getenv("NAVER_SECRET")
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_SECRET = os.getenv("GITHUB_SECRET")
