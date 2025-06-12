@@ -21,4 +21,7 @@ urlpatterns = [
     path('check-nickname/', oauth_views.check_nickname_post, name='check_nickname'),
     path('nickname/check/', oauth_views.check_nickname_get, name='check_nickname'),
     path('nickname/', oauth_views.oauth_nickname, name='nickname'),
+    # kakaotalk
+    path('kakao/login/', oauth_views.KakaoLoginRedirectView.as_view()),
+    path('kakao/callback/', oauth_views.kakao_callback),
 ]
