@@ -5,51 +5,84 @@ name: Code Quality Checks
 on:
   push:
     branches:
-      - main
+      - '**'
   pull_request:
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DJANGO_ENV: development
+      DB_NAME: ${{ secrets.PG_NAME }}
+      DB_USER: ${{ secrets.PG_USER }}
+      DB_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      DB_HOST: localhost
+      DB_PORT: 5432
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
 
     services:
-      my-db:
+      postgres:
         image: postgres:14
-#        ports:
-#          - 5432:5432
         env:
           POSTGRES_USER: ${{ secrets.PG_USER }}
           POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
           POSTGRES_DB: ${{ secrets.PG_NAME }}
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build and start containers
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
         run: |
-          docker compose up -d --build
-          sleep 10  # wait for DB to be ready
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install black isort
 
-      - name: Check code formatting with isort
-        run: docker compose exec my-django isort . --check --diff
+      - name: Create .env
+        run: |
+          cat <<EOF > .env
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          DJANGO_ENV=development
+          DB_NAME=${{ secrets.PG_NAME }}
+          DB_USER=${{ secrets.PG_USER }}
+          DB_PASSWORD=${{ secrets.PG_PASSWORD }}
+          DB_HOST=localhost
+          DB_PORT=5432
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+          EOF
 
-      - name: Check code formatting with black
-        run: docker compose exec my-django black . --check
+      - name: Run isort (import sorting)
+        run: isort . --check --diff
+
+      - name: Run black (code formatting)
+        run: black . --check
+
+      - name: Wait for database
+        run: python manage.py wait_for_db
 
       - name: Apply migrations
-        run: docker compose exec my-django python manage.py migrate
+        run: |
+          python manage.py makemigrations --noinput
+          python manage.py migrate --noinput
 
       - name: Run tests
-        run: docker compose exec my-django python manage.py test
+        run: python manage.py test
 
-      - name: Cleanup containers
+      - name: Cleanup services
+        if: always()
         run: docker compose down --volumes --remove-orphans
-
-
-

@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   my-db:
     container_name: postgres
-    image: postgres
+    image: postgres:14
+
     environment:
       - POSTGRES_DB=django-postgres
       - POSTGRES_USER=postgres
@@ -20,22 +19,42 @@ services:
     networks:
       - account_network
 
+  my-redis:
+    image: redis:7
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - account_network
+
   my-django:
     build: .
+
     container_name: django
     working_dir: /app
     volumes:
       - .:/app
     ports:
       - "8000:8000"
-    environment: # 컨테이너 환경변수 설정
+    env_file:
+      - .env         # ← 여기에 모든 환경변수(.env) 통합
+    environment:
       - DJANGO_SETTINGS_MODULE=config.settings.prod
+      - REDIS_HOST=my-redis
     depends_on:
       my-db:
         condition: service_healthy
+      my-redis:
+        condition: service_healthy
     networks:
       - account_network
-
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
 volumes:
   postgres_data:

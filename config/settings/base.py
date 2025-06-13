@@ -1,19 +1,47 @@
-# base.py
-
+import json
+import os
+from datetime import timedelta
 from pathlib import Path
 
-# 기본 경로
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# 보안 키
-SECRET_KEY = "django-insecure-개발용-secret-key"  # 하드코딩
+# 1. .env 먼저 전체 적용
+if (BASE_DIR / ".env").exists():
+    load_dotenv(BASE_DIR / ".env")
+# 2. .env.local로 덮어쓰기 (override=True)
+if (BASE_DIR / ".env.local").exists():
+    load_dotenv(BASE_DIR / ".env.local", override=True)
 
-# 기본 디버그
-DEBUG = True  # dev.py, prod.py에서 따로 override
+# SECRET_KEY 설정
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-ALLOWED_HOSTS = ["*"]  #  Docker 외부 접속
+# print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}")  # Debugging secret_key
 
-# 앱 등록
+REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
+# print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}") Debugging LOCAL 기준인지 배포기준인지 확인
+
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT') or 465)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = (os.getenv('EMAIL_USE_TLS') or 'false').lower() == 'true'
+EMAIL_USE_SSL = (os.getenv('EMAIL_USE_SSL') or 'false').lower() == 'true'
+REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
+
+
+print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}")
+
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -22,12 +50,22 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "accountbook",
+    "core",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "drf_spectacular",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
+    "debug_toolbar",
+    "oauth",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -39,7 +77,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],  # 배포시 체크
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -57,47 +95,129 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "django-postgres",
-        "USER": "postgres",
-        "PASSWORD": "qwe123",  #  Docker Compose와 맞추기
-        "HOST": "my-db",
-        "PORT": "5432",
+        "NAME": DB_NAME,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
     }
 }
 
-# 비밀번호 검증
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]
 
-# 국제화
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static 파일
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# 기본 primary key type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-# 유저 인증
 AUTH_USER_MODEL = 'accountbook.CustomUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'accountbook.authentication.CookieJWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    'TOKEN_OBTAIN_SERIALIZER': 'accountbook.serializers.MyTokenObtainPairSerializer',
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "가계부 API",
+    "DESCRIPTION": "Django REST Framework 기반 가계부 API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "SECURITY": [{"bearerAuth": []}],
+    "COMPONENTS": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+}
+
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
+if DJANGO_ENV == 'production':
+    BASE_URL = "https://yourdomain.com"
+else:
+    BASE_URL = "http://localhost:8000"
+
+CORS_ALLOW_CREDENTIALS = True
+
+if DJANGO_ENV == 'production':
+    CORS_ALLOWED_ORIGINS = ["https://yourfrontenddomain.com"]
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    COOKIE_SECURE = True
+else:
+    CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    COOKIE_SECURE = True
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# OAuth
+NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
+NAVER_SECRET = os.getenv("NAVER_SECRET")
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_SECRET = os.getenv("GITHUB_SECRET")
+KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
+KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")

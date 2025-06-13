@@ -1,3 +1,6 @@
+# 민감정보 보안
+secret.json
+
 # 줄바꿈
 .gitattributes
 
@@ -63,7 +66,7 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-**/migrations/
+#**/migrations/
 
 # Flask stuff:
 instance/
@@ -136,6 +139,7 @@ docker-compose.override.yml
 
 # Environments
 .env
+.env.local
 .venv
 env/
 venv/
