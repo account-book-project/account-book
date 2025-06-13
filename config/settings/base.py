@@ -11,7 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 if (BASE_DIR / ".env").exists():
     load_dotenv(BASE_DIR / ".env")
 # 2. .env.local로 덮어쓰기 (override=True)
-if (BASE_DIR / ".env.local").exists():
+if (
+    os.getenv("DJANGO_ENV", "development") == "development"
+    and (BASE_DIR / ".env.local").exists()
+):
     load_dotenv(BASE_DIR / ".env.local", override=True)
 
 # SECRET_KEY 설정
@@ -62,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -91,7 +95,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
-
+print("==== [DEBUG] DB_HOST:", DB_HOST)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -133,6 +137,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
