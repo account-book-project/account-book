@@ -47,8 +47,8 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.prod
       - REDIS_HOST=my-redis
     depends_on:
-      my-db:
-        condition: service_healthy
+#      my-db:
+#        condition: service_healthy
       my-redis:
         condition: service_healthy
     networks:
