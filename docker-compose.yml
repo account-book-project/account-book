@@ -65,7 +65,9 @@ services:
       - "80:80"               # http 포트 오픈
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro   # 직접 만든 nginx 설정파일
-      - static_volume:/app/staticfiles               # django static 파일 연결
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - static_volume:/app/staticfiles
+      # django static 파일 연결
     depends_on:
       - my-django
     networks:
