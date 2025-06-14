@@ -1,5 +1,5 @@
-
 from .base import *
+
 print(f"[settings prod] DEBUG={DEBUG}  ALLOWED_HOSTS={ALLOWED_HOSTS}")
 
 DEBUG = False
