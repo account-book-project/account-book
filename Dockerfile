@@ -1,10 +1,11 @@
-FROM python:3.13
+FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y postgresql-client
 
 WORKDIR /app
 
-RUN pip install --upgrade pip
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY ./ /app
 
