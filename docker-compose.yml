@@ -34,7 +34,6 @@ services:
 
   my-django:
     build: .
-
     container_name: django
     working_dir: /app
     volumes:
@@ -42,7 +41,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env         # ← 여기에 모든 환경변수(.env) 통합
+      - .env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.prod
       - REDIS_HOST=my-redis
@@ -56,7 +55,7 @@ services:
     command: >
       sh -c "python manage.py collectstatic --noinput \
              && python manage.py migrate \
-             && python manage.py runserver 0.0.0.0:8000"
+             && gunicorn config.wsgi:application -b 0.0.0.0:8000"
 
 volumes:
   postgres_data:

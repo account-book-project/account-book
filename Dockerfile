@@ -10,6 +10,8 @@ COPY ./ /app
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT [ "sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000" ]
+# Gunicorn으로 실행 (운영 환경)
+ENTRYPOINT [ "sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application -b 0.0.0.0:8000" ]
+
 
 
