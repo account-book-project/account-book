@@ -1,6 +1,6 @@
-import logging
+
 from .base import *
-logging.warning(f"[settings] LOADED prod.py → DEBUG={DEBUG}  ALLOWED_HOSTS={ALLOWED_HOSTS}")
+print(f"[settings prod] DEBUG={DEBUG}  ALLOWED_HOSTS={ALLOWED_HOSTS}")
 
 DEBUG = False
 ALLOWED_HOSTS = ["teamnotfound.duckdns.org"]
