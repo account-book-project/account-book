@@ -35,9 +35,6 @@ EMAIL_USE_TLS = (os.getenv('EMAIL_USE_TLS') or 'false').lower() == 'true'
 EMAIL_USE_SSL = (os.getenv('EMAIL_USE_SSL') or 'false').lower() == 'true'
 REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
 
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
