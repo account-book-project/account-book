@@ -202,8 +202,6 @@ if DJANGO_ENV == 'production':
     CORS_ALLOWED_ORIGINS = ["https://teamnotfound.duckdns.org"]
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
-    CSRF_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
     COOKIE_SECURE = True
 else:
     BASE_URL = "http://localhost:8000"

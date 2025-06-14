@@ -12,5 +12,3 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
-CSRF_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
