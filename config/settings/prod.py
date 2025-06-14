@@ -1,5 +1,16 @@
 from config.settings.base import *
 
-DEBUG = False  # 운영처럼!
-ALLOWED_HOSTS = ["teamnotfound.duckdns.org"]  # 로컬/모든 접속 허용
+DEBUG = False
+ALLOWED_HOSTS = [
+    "teamnotfound.duckdns.org"
+]
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://teamnotfound.duckdns.org"
+]
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
+CSRF_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
