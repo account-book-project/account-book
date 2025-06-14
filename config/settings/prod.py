@@ -1,9 +1,9 @@
 from config.settings.base import *
 
-print(f"[settings prod] DEBUG={DEBUG}  ALLOWED_HOSTS={ALLOWED_HOSTS}")
-
 DEBUG = False
 ALLOWED_HOSTS = ["teamnotfound.duckdns.org"]
+
+print(f"[settings prod] DEBUG={DEBUG}  ALLOWED_HOSTS={ALLOWED_HOSTS}")
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
