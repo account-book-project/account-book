@@ -3,8 +3,8 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main # 메인 브런치까지 추가
-      - release # 릴리즈 
+      - main
+      - release
   workflow_dispatch:
 
 jobs:
@@ -16,6 +16,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
+          BRANCH: ${{ github.ref_name }}
         run: |
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
@@ -23,7 +24,10 @@ jobs:
 
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $USER@$HOST << EOF
             cd ~/account-book
-            git pull origin main
+            git fetch origin $BRANCH
+            git checkout $BRANCH
+            git pull origin $BRANCH
             docker compose up -d --build
           EOF
+
 
