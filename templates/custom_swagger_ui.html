@@ -11,20 +11,25 @@
 </head>
 <body>
   <div id="swagger-ui"></div>
-  <!-- CDN으로 Swagger UI JS 불러오기 -->
+  <!-- CDN으로 Swagger UI 스크립트 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-standalone-preset.js"></script>
   <script>
     window.onload = () => {
-      SwaggerUIBundle({
+      const ui = SwaggerUIBundle({
         url: "{% url 'schema' %}",
         dom_id: "#swagger-ui",
-        presets: [SwaggerUIBundle.presets.apis],
-        layout: "BaseLayout",
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout",
         deepLinking: true,
         docExpansion: "none",
         persistAuthorization: true,
         withCredentials: true,
       });
+      window.ui = ui;
     };
   </script>
 </body>
