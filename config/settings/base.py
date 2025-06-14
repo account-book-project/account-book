@@ -19,11 +19,7 @@ if (
 
 # SECRET_KEY 설정
 SECRET_KEY = os.getenv("SECRET_KEY")
-
-# print(f"[DEBUG] SECRET_KEY: {SECRET_KEY}")  # Debugging secret_key
-
 REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
-# print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}") Debugging LOCAL 기준인지 배포기준인지 확인
 
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 DB_NAME = os.getenv('DB_NAME')
@@ -38,9 +34,6 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = (os.getenv('EMAIL_USE_TLS') or 'false').lower() == 'true'
 EMAIL_USE_SSL = (os.getenv('EMAIL_USE_SSL') or 'false').lower() == 'true'
 REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis')
-
-
-print(f"[DEBUG] REDIS_HOST: {REDIS_HOST}")
 
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
