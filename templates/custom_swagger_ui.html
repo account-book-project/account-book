@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ title }}</title>
+  <!-- CDN으로 Swagger UI CSS 불러오기 -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui.css"
+  />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <!-- CDN으로 Swagger UI JS 불러오기 -->
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = () => {
+      SwaggerUIBundle({
+        url: "{% url 'schema' %}",
+        dom_id: "#swagger-ui",
+        presets: [SwaggerUIBundle.presets.apis],
+        layout: "BaseLayout",
+        deepLinking: true,
+        docExpansion: "none",
+        persistAuthorization: true,
+        withCredentials: true,
+      });
+    };
+  </script>
+</body>
+</html>

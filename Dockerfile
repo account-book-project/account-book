@@ -14,10 +14,10 @@ RUN pip install --no-cache-dir --upgrade pip \
 # 3) 나머지 코드 복사
 COPY . .
 
-# 4) 정적 파일 모으기
+# 5) 정적 파일 모으기
 RUN python manage.py collectstatic --noinput
 
-# 4) 마이그레이트 후 실행
+# 6) 마이그레이트 후 실행
 ENTRYPOINT [ "sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application -b 0.0.0.0:8000" ]
 
 
