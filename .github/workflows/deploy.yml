@@ -3,8 +3,8 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main
-      - release
+      - main # 메인 브런치까지 추가
+      - release # 릴리즈 
   workflow_dispatch:
 
 jobs:
