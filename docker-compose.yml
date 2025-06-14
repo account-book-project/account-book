@@ -63,6 +63,7 @@ services:
     container_name: nginx
     ports:
       - "80:80"               # http 포트 오픈
+      - "443:443"             # https 추가!!
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro   # 직접 만든 nginx 설정파일
       - /etc/letsencrypt:/etc/letsencrypt:ro
