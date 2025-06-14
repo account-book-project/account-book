@@ -174,14 +174,29 @@ SPECTACULAR_SETTINGS = {
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
-    "SECURITY": [{"bearerAuth": []}],
+    # 이제 쿠키·세션·헤더 인증 모두 지원
+    "SECURITY": [
+        {"cookieAuth": []},  # JWT 쿠키 방식
+        {"sessionAuth": []},  # Django 세션 방식
+        {"bearerAuth": []},  # Bearer 헤더 방식
+    ],
     "COMPONENTS": {
         "securitySchemes": {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "access_token",  # 실제 쿠키 이름으로 변경
+            },
+            "sessionAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "sessionid",
+            },
             "bearerAuth": {
                 "type": "http",
                 "scheme": "bearer",
                 "bearerFormat": "JWT",
-            }
+            },
         }
     },
 }
