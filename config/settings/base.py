@@ -198,22 +198,19 @@ SPECTACULAR_SETTINGS = {
 
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 if DJANGO_ENV == 'production':
-    BASE_URL = "https://yourdomain.com"
-else:
-    BASE_URL = "http://localhost:8000"
-
-CORS_ALLOW_CREDENTIALS = True
-
-if DJANGO_ENV == 'production':
-    CORS_ALLOWED_ORIGINS = ["https://yourfrontenddomain.com"]
+    BASE_URL = "https://teamnotfound.duckdns.org"
+    CORS_ALLOWED_ORIGINS = ["https://teamnotfound.duckdns.org"]
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
+    CSRF_COOKIE_DOMAIN = ".teamnotfound.duckdns.org"
     COOKIE_SECURE = True
 else:
+    BASE_URL = "http://localhost:8000"
     CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
-    COOKIE_SECURE = True
+    COOKIE_SECURE = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
