@@ -34,7 +34,7 @@ services:
 
   my-django:
     build: .
-    container_name: django
+    container_name: my-django
     working_dir: /app
     volumes:
       - .:/app
