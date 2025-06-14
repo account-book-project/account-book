@@ -73,6 +73,7 @@ services:
 
 volumes:
   postgres_data:
+  static_volume:
 
 networks:
   account_network:
