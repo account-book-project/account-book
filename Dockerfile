@@ -4,14 +4,17 @@ RUN apt-get update && apt-get install -y postgresql-client
 
 WORKDIR /app
 
+# 1) requirements.txt만 복사
+COPY requirements.txt ./
+
+# 2) 패키지 설치
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-COPY ./ /app
+# 3) 나머지 코드 복사
+COPY . .
 
-RUN pip install -r requirements.txt
-
-# Gunicorn으로 실행 (운영 환경)
+# 4) 마이그레이트 후 실행
 ENTRYPOINT [ "sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application -b 0.0.0.0:8000" ]
 
 
