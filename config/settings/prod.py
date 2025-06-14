@@ -7,3 +7,4 @@ ALLOWED_HOSTS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+CSRF_FAILURE_VIEW = 'django.views.debug.technical_500_response'
