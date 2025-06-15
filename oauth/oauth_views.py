@@ -340,7 +340,7 @@ def kakao_callback(request):
     # 1. 액세스 토큰 요청
     token_json = get_kakao_access_token(
         code,
-        redirect_uri='http://localhost:8000/oauth/kakao/callback/',
+        redirect_uri=settings.KAKAO_REDIRECT_URI,
         client_id=settings.KAKAO_CLIENT_ID,
         client_secret=getattr(settings, 'KAKAO_CLIENT_SECRET', None),
     )
