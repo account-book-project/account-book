@@ -2,7 +2,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import TemplateView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -10,10 +9,13 @@ from drf_spectacular.views import (
 )
 from rest_framework.permissions import AllowAny
 
+# html
+from accountbook.views.main_views import MainPageView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # 임시 메인
-    path('', TemplateView.as_view(template_name="main.html"), name='main'),
+    # html
+    path('', MainPageView.as_view(), name='main'),  # /main/ 으로 접속
     # API 엔드포인트
     path('api/auth/', include('accountbook.urls.auth_urls')),
     path('api/users/', include('accountbook.urls.user_urls')),

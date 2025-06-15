@@ -1,10 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Team Not Found - Main</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .slogan {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        .slogan span {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: normal;
+            color: #6b7280;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            color: #10b981;
+            margin-bottom: 2rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background-color: #3b82f6;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2563eb;
+        }
+    </style>
 </head>
 <body>
-$END$
+    <div class="slogan">
+        404 Team not found
+        <span>200 passion ok</span>
+    </div>
+
+    <div class="message">로그인에 성공했습니다!</div>
+
+    <div class="btn-group">
+        <a href="/account/" class="btn">가계부 바로가기</a>
+        <a href="/profile/" class="btn">내 프로필 보기</a>
+    </div>
 </body>
 </html>
