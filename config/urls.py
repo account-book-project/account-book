@@ -30,7 +30,7 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(
             url_name='schema',
             permission_classes=[AllowAny],
-            template_name='custom_swagger_ui.html',  # 여기서 CDN 템플릿 사용
+            # template_name='custom_swagger_ui.html',  # 여기서 CDN 템플릿 사용
         ),
         name='swagger-ui',
     ),
