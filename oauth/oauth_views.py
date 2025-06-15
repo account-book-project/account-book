@@ -96,8 +96,12 @@ def naver_callback(request):
         login(request, user)
         return redirect('main')
 
+    # return redirect(
+    #     reverse('oauth:nickname') + f'?access_token={access_token}&oauth=naver'
+    # )
+    # html
     return redirect(
-        reverse('oauth:nickname') + f'?access_token={access_token}&oauth=naver'
+        reverse('oauth:nickname_form') + f'?access_token={access_token}&oauth=naver'
     )
 
 
@@ -140,8 +144,12 @@ def github_callback(request):
         login(request, user)
         return redirect('main')
 
+    # return redirect(
+    #     reverse('oauth:nickname') + f'?access_token={access_token}&oauth=github'
+    # )
+    # html
     return redirect(
-        reverse('oauth:nickname') + f'?access_token={access_token}&oauth=github'
+        reverse('oauth:nickname_form') + f'?access_token={access_token}&oauth=github'
     )
 
 
