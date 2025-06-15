@@ -1,160 +1,110 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>닉네임 설정</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
-        .form-container { animation: fadeIn 0.6s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .input-field:focus { box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); }
-        .submit-button { transition: all 0.2s ease; }
-        .submit-button:hover { transform: translateY(-2px); }
-        .error-message { animation: shake 0.4s linear; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>닉네임 설정</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex items-center justify-center p-4">
-    <div class="form-container bg-white rounded-xl shadow-xl w-full max-w-md p-8 mx-auto">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800">닉네임 설정</h1>
-            <p class="text-gray-600 mt-2">회원가입을 완료하기 위해 사용할 닉네임을 입력해주세요.</p>
-        </div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">닉네임 설정</h1>
+    <p class="text-gray-600 text-center mb-6">소셜 로그인 이후 사용할 닉네임을 입력해주세요.</p>
 
-        <form id="nicknameForm" class="space-y-6">
-            <div>
-                <label for="nickname" class="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
-                <input
-                    type="text"
-                    id="nickname"
-                    name="nickname"
-                    class="input-field w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none"
-                    placeholder="사용하실 닉네임을 입력해주세요"
-                    required
-                    minlength="2"
-                    maxlength="15"
-                />
-                <p class="text-xs text-gray-500 mt-1">2~15자 이내로 입력해주세요</p>
-            </div>
+    <form id="nicknameForm" class="space-y-4">
+      <input
+        type="text"
+        id="nickname"
+        name="nickname"
+        placeholder="닉네임 입력"
+        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:border-blue-300"
+        required
+        minlength="2"
+        maxlength="15"
+      />
+      <p class="text-sm text-gray-500">2~15자 이내, 중복 불가</p>
 
-            <div id="errorContainer" class="hidden">
-                <p id="errorMessage" class="text-red-500 text-sm error-message"></p>
-            </div>
+      <div id="errorContainer" class="hidden text-red-500 text-sm"></div>
 
-            <button
-                type="submit"
-                class="submit-button w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            >
-                <span id="buttonText">닉네임 설정 완료</span>
-                <span id="loadingSpinner" class="hidden inline-block animate-spin ml-2">&#8635;</span>
-            </button>
-        </form>
+      <button
+        type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+      >
+        닉네임 등록
+      </button>
+    </form>
+  </div>
 
-        <div class="mt-6 text-center">
-            <p class="text-sm text-gray-500">
-                닉네임은 나중에 마이페이지에서 변경할 수 있습니다.
-            </p>
-        </div>
-    </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessToken = urlParams.get('access_token');
+      const oauth = urlParams.get('oauth');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            const accessToken = urlParams.get('access_token');
-            const oauth = urlParams.get('oauth');
+      const form = document.getElementById('nicknameForm');
+      const errorContainer = document.getElementById('errorContainer');
 
-            if (!accessToken || !oauth) {
-                showError('필수 정보가 누락되었습니다. 다시 로그인해주세요.');
-                return;
+      if (!accessToken || !oauth) {
+        errorContainer.textContent = '잘못된 접근입니다. 다시 로그인 해주세요.';
+        errorContainer.classList.remove('hidden');
+        return;
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const nickname = document.getElementById('nickname').value.trim();
+        if (nickname.length < 2 || nickname.length > 15) {
+          errorContainer.textContent = '닉네임은 2~15자 사이여야 합니다.';
+          errorContainer.classList.remove('hidden');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/oauth/nickname/?access_token=${encodeURIComponent(accessToken)}&oauth=${encodeURIComponent(oauth)}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ nickname: nickname }),
+          });
+
+          if (response.redirected) {
+            window.location.href = response.url;
+            return;
+          }
+
+          const data = await response.json();
+          if (!response.ok) {
+            errorContainer.textContent = data.detail || '오류가 발생했습니다.';
+            errorContainer.classList.remove('hidden');
+            return;
+          }
+
+          window.location.href = '/';
+        } catch (err) {
+          errorContainer.textContent = '서버 오류가 발생했습니다.';
+          errorContainer.classList.remove('hidden');
+        }
+      });
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === name + '=') {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
             }
-
-            const form = document.getElementById('nicknameForm');
-            const buttonText = document.getElementById('buttonText');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const nickname = document.getElementById('nickname').value.trim();
-
-                if (nickname.length < 2 || nickname.length > 15) {
-                    showError('닉네임은 2~15자 이내로 입력해주세요.');
-                    return;
-                }
-
-                buttonText.textContent = '처리 중...';
-                loadingSpinner.classList.remove('hidden');
-
-                try {
-                    const response = await fetch(`/oauth/nickname/?access_token=${encodeURIComponent(accessToken)}&oauth=${encodeURIComponent(oauth)}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({ nickname: nickname })
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.detail || '닉네임 설정 중 오류가 발생했습니다.');
-                    }
-
-                    // ✅ 수정된 부분: redirect 확인 제거 → 성공 시 바로 메인 이동
-                    window.location.href = '/';
-
-                } catch (error) {
-                    showError(error.message || '서버 오류가 발생했습니다. 다시 시도해주세요.');
-                    buttonText.textContent = '닉네임 설정 완료';
-                    loadingSpinner.classList.add('hidden');
-                }
-            });
-
-            function showError(message) {
-                const errorContainer = document.getElementById('errorContainer');
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.textContent = message;
-                errorContainer.classList.remove('hidden');
-                errorContainer.classList.remove('error-message');
-                setTimeout(() => {
-                    errorContainer.classList.add('error-message');
-                }, 10);
-            }
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-        });
-    </script>
+          }
+        }
+        return cookieValue;
+      }
+    });
+  </script>
 </body>
 </html>
+
