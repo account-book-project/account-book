@@ -6,9 +6,12 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.base_user import BaseUserManager
 from django.core import signing
 from django.http import Http404, HttpResponse
-from django.shortcuts import redirect
+
+# html
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.crypto import get_random_string
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import RedirectView
 from drf_spectacular.types import OpenApiTypes
@@ -20,10 +23,14 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accountbook.utils.jwt_cookie import set_jwt_cookie
-from oauth.serializers import (  # 👈 반드시 serializers 위치 확인
-    NicknameCheckSerializer,
-    NicknameSerializer,
-)
+from oauth.serializers import NicknameCheckSerializer, NicknameSerializer
+
+
+# html
+class NicknameFormView(View):
+    def get(self, request):
+        return render(request, 'oauth/nickname_form.html')
+
 
 User = get_user_model()
 
@@ -45,6 +52,11 @@ KAKAO_LOGIN_URL = 'https://kauth.kakao.com/oauth/authorize'
 KAKAO_TOKEN_URL = 'https://kauth.kakao.com/oauth/token'
 KAKAO_PROFILE_URL = 'https://kapi.kakao.com/v2/user/me'
 KAKAO_CALLBACK_URL = '/oauth/kakao/callback/'
+
+
+class NicknameFormView(View):
+    def get(self, request):
+        return render(request, 'oauth/nickname_form.html')
 
 
 #  NAVER 로그인 Redirect

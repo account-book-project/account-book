@@ -24,4 +24,8 @@ urlpatterns = [
     # kakaotalk
     path('kakao/login/', oauth_views.KakaoLoginRedirectView.as_view()),
     path('kakao/callback/', oauth_views.kakao_callback),
+    # html
+    path(
+        'nickname/form/', oauth_views.NicknameFormView.as_view(), name='nickname_form'
+    ),
 ]
